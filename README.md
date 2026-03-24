@@ -49,7 +49,7 @@ Remove `--color` if you prefer plain text (no ANSI color codes).
 
 ## Themes
 
-Set a color theme by creating `~/.claude/scripts/context-bar.conf`:
+Set a color theme by creating `context-bar.conf` in the same directory as the installed script (for a standard install, `~/.claude/scripts/context-bar.conf`):
 
 ```sh
 THEME=catppuccin-mocha

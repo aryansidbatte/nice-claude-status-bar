@@ -19,7 +19,7 @@ done
 # ── Config ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
 CONF_FILE="${SCRIPT_DIR}/context-bar.conf"
-[ -f "$CONF_FILE" ] && . "$CONF_FILE" 2>/dev/null || true
+if [ -f "$CONF_FILE" ]; then . "$CONF_FILE" 2>/dev/null; fi
 
 # ── Theme ──────────────────────────────────────────────────────────────────────
 set_theme() {
