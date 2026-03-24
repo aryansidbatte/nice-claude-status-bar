@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 FIXTURES="$(dirname "$0")/fixtures"
 SCRIPTS="$(dirname "$0")/.."
