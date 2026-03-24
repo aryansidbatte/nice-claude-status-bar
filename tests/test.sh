@@ -5,6 +5,9 @@ SCRIPTS="$(dirname "$0")/.."
 PASS=0
 FAIL=0
 
+_cleanup() { rm -f "$SCRIPTS/context-bar.conf"; }
+trap _cleanup EXIT INT TERM
+
 assert_eq() {
     label="$1"
     expected="$2"
@@ -126,7 +129,8 @@ case "$actual" in
     *) echo "FAIL: theme: unknown theme falls back to teal"; echo "  Actual: [$actual]"; FAIL=$((FAIL+1)) ;;
 esac
 
-# Test: no conf file uses teal (conf was deleted above — this runs without one)
+# Test: no conf file uses teal
+rm -f "$SCRIPTS/context-bar.conf"
 actual=$(cat "$FIXTURES/stdin-full.json" | sh "$SCRIPTS/context-bar.sh" --color --test-segment model)
 case "$actual" in
     *"${teal_teal}"*) echo "PASS: theme: no conf file defaults to teal"; PASS=$((PASS+1)) ;;
