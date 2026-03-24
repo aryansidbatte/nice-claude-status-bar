@@ -16,6 +16,11 @@ for arg in "$@"; do
     fi
 done
 
+# ── Config ─────────────────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+CONF_FILE="${SCRIPT_DIR}/context-bar.conf"
+[ -f "$CONF_FILE" ] && . "$CONF_FILE" 2>/dev/null || true
+
 # ── Colors ─────────────────────────────────────────────────────────────────────
 RESET=''
 C_TEAL=''
@@ -32,7 +37,6 @@ fi
 INPUT=$(cat)
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
 FETCH_USAGE="${SCRIPT_DIR}/fetch-usage.sh"
 
 slug_from_cwd() {
