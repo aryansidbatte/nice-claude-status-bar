@@ -37,6 +37,18 @@ raw='{"five_hour":{"utilization":61,"resets_at":"2026-03-24T15:00:00Z"},"seven_d
 actual=$(HOME=/nonexistent RAW_DATA="$raw" sh -c '. '"$SCRIPTS"'/fetch-usage.sh; parse_api_response "$RAW_DATA"' 2>/dev/null | jq -r '.sessionUsage')
 assert_eq "parse_api_response: extracts sessionUsage" "61" "$actual"
 
+# Task 5: model segment — display_name strips Claude prefix
+actual=$(cat "$FIXTURES/stdin-full.json" | sh "$SCRIPTS/context-bar.sh" --test-segment model)
+assert_eq "model: strips Claude prefix from display_name" "Sonnet 4.6" "$actual"
+
+# Task 5: model segment — falls back to model.id transformation
+actual=$(cat "$FIXTURES/stdin-minimal.json" | sh "$SCRIPTS/context-bar.sh" --test-segment model)
+assert_eq "model: falls back to model.id transformation" "Sonnet 4.6" "$actual"
+
+# Task 5: model segment — null both fields returns empty
+actual=$(printf '{"model":{"id":null,"display_name":null},"cwd":"/tmp","context_window":null}' | sh "$SCRIPTS/context-bar.sh" --test-segment model)
+assert_eq "model: null fields returns empty" "" "$actual"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
