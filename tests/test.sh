@@ -59,6 +59,11 @@ actual=$(printf '{"model":{"id":"claude-sonnet-4-6","display_name":null},"cwd":"
     | sh "$SCRIPTS/context-bar.sh" --test-segment git)
 assert_eq "git: empty output when cwd is empty" "" "$actual"
 
+# Task 7: session duration — skips silently when no JSONL found
+actual=$(printf '{"model":{"id":"claude-sonnet-4-6","display_name":null},"cwd":"/nonexistent/path","context_window":null}' \
+    | sh "$SCRIPTS/context-bar.sh" --test-segment duration)
+assert_eq "duration: empty when no JSONL" "" "$actual"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

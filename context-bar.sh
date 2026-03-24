@@ -101,6 +101,39 @@ segment_git() {
     printf '%b%s%b  %b%s%b' "$C_TEAL" "⎇" "$RESET" "$C_BLUE" "$display" "$RESET"
 }
 
+# ── Segment: Session Duration ──────────────────────────────────────────────────
+segment_duration() {
+    cwd=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null) || cwd=""
+    [ -z "$cwd" ] && return
+
+    jsonl=$(find_session_jsonl "$cwd") || return
+    [ -z "$jsonl" ] && return
+
+    # First timestamp in the file
+    first_ts=$(head -1 "$jsonl" 2>/dev/null | jq -r '.timestamp // empty' 2>/dev/null) || return
+    [ -z "$first_ts" ] && return
+
+    # Compute duration in seconds using jq fromdate
+    duration=$(jq -n --arg ts "$first_ts" '
+        ($ts | try fromdate catch null) as $start |
+        if $start == null then empty
+        else (now - $start | floor)
+        end
+    ' 2>/dev/null) || return
+    [ -z "$duration" ] && return
+
+    hours=$(( duration / 3600 ))
+    mins=$(( (duration % 3600) / 60 ))
+
+    if [ "$hours" -gt 0 ]; then
+        formatted="${hours}h ${mins}m"
+    else
+        formatted="${mins}m"
+    fi
+
+    printf '%b%s%b %b%s%b' "$C_TEAL" "⧗" "$RESET" "$C_BLUE" "$formatted" "$RESET"
+}
+
 # ── Test harness dispatch ──────────────────────────────────────────────────────
 if [ -n "$TEST_SEGMENT" ]; then
     "segment_${TEST_SEGMENT}"
