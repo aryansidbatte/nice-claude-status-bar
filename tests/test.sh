@@ -32,6 +32,11 @@ assert_eq "read_stale_cache: returns non-zero when cache missing" "1" "$actual"
 actual=$(HOME=/nonexistent sh -c '. '"$SCRIPTS"'/fetch-usage.sh; read_active_lock' 2>/dev/null; echo $?)
 assert_eq "read_active_lock: returns non-zero when no lock file" "1" "$actual"
 
+# Task 4: parse_api_response — extracts sessionUsage and weeklyUsage
+raw='{"five_hour":{"utilization":61,"resets_at":"2026-03-24T15:00:00Z"},"seven_day":{"utilization":38,"resets_at":"2026-03-28T00:00:00Z"},"extra_usage":{"is_enabled":false,"monthly_limit":0,"used_credits":0,"utilization":0}}'
+actual=$(HOME=/nonexistent RAW_DATA="$raw" sh -c '. '"$SCRIPTS"'/fetch-usage.sh; parse_api_response "$RAW_DATA"' 2>/dev/null | jq -r '.sessionUsage')
+assert_eq "parse_api_response: extracts sessionUsage" "61" "$actual"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
