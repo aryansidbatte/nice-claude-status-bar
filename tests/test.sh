@@ -105,6 +105,44 @@ case "$actual_line1" in
 esac
 rm -rf "$FAKE_DIR3"
 
+# ── Theme tests ────────────────────────────────────────────────────────────────
+# Test: amber theme applies correct C_TEAL to colored output
+echo "THEME=amber" > "$SCRIPTS/context-bar.conf"
+amber_teal=$(printf '\033[38;5;130m')
+actual=$(cat "$FIXTURES/stdin-full.json" | sh "$SCRIPTS/context-bar.sh" --color --test-segment model)
+rm -f "$SCRIPTS/context-bar.conf"
+case "$actual" in
+    *"${amber_teal}"*) echo "PASS: theme: amber C_TEAL applied"; PASS=$((PASS+1)) ;;
+    *) echo "FAIL: theme: amber C_TEAL applied"; echo "  Actual: [$actual]"; FAIL=$((FAIL+1)) ;;
+esac
+
+# Test: unknown theme name falls back to teal C_TEAL
+echo "THEME=nonexistent" > "$SCRIPTS/context-bar.conf"
+teal_teal=$(printf '\033[38;5;66m')
+actual=$(cat "$FIXTURES/stdin-full.json" | sh "$SCRIPTS/context-bar.sh" --color --test-segment model)
+rm -f "$SCRIPTS/context-bar.conf"
+case "$actual" in
+    *"${teal_teal}"*) echo "PASS: theme: unknown theme falls back to teal"; PASS=$((PASS+1)) ;;
+    *) echo "FAIL: theme: unknown theme falls back to teal"; echo "  Actual: [$actual]"; FAIL=$((FAIL+1)) ;;
+esac
+
+# Test: no conf file uses teal (conf was deleted above — this runs without one)
+actual=$(cat "$FIXTURES/stdin-full.json" | sh "$SCRIPTS/context-bar.sh" --color --test-segment model)
+case "$actual" in
+    *"${teal_teal}"*) echo "PASS: theme: no conf file defaults to teal"; PASS=$((PASS+1)) ;;
+    *) echo "FAIL: theme: no conf file defaults to teal"; echo "  Actual: [$actual]"; FAIL=$((FAIL+1)) ;;
+esac
+
+# Test: catppuccin-mocha applies truecolor C_TEAL
+echo "THEME=catppuccin-mocha" > "$SCRIPTS/context-bar.conf"
+mocha_teal=$(printf '\033[38;2;203;166;247m')
+actual=$(cat "$FIXTURES/stdin-full.json" | sh "$SCRIPTS/context-bar.sh" --color --test-segment model)
+rm -f "$SCRIPTS/context-bar.conf"
+case "$actual" in
+    *"${mocha_teal}"*) echo "PASS: theme: catppuccin-mocha truecolor C_TEAL applied"; PASS=$((PASS+1)) ;;
+    *) echo "FAIL: theme: catppuccin-mocha truecolor C_TEAL applied"; echo "  Actual: [$actual]"; FAIL=$((FAIL+1)) ;;
+esac
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
