@@ -91,6 +91,20 @@ actual=$(cat "$FIXTURES/stdin-full.json" \
       sh "$SCRIPTS/context-bar.sh" --test-segment subscription)
 assert_eq "subscription: empty when fetch-usage returns error" "" "$actual"
 
+# Task 11: full output — line 1 contains model and symbol
+FAKE_DIR3="$(mktemp -d)"
+FAKE_SLUG3="-Users-testuser-myproject"
+mkdir -p "$FAKE_DIR3/.claude/projects/$FAKE_SLUG3"
+cp "$FIXTURES/session.jsonl" "$FAKE_DIR3/.claude/projects/$FAKE_SLUG3/session.jsonl"
+actual_line1=$(cat "$FIXTURES/stdin-full.json" \
+    | HOME="$FAKE_DIR3" FETCH_USAGE_OVERRIDE='{"error":"no-credentials"}' \
+      sh "$SCRIPTS/context-bar.sh" | head -1)
+case "$actual_line1" in
+    *"◆"*"Sonnet 4.6"*) echo "PASS: full output: line 1 contains model"; PASS=$((PASS+1)) ;;
+    *) echo "FAIL: full output: line 1 contains model"; echo "  Actual: [$actual_line1]"; FAIL=$((FAIL+1)) ;;
+esac
+rm -rf "$FAKE_DIR3"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

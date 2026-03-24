@@ -277,8 +277,43 @@ segment_subscription() {
     printf '%b' "$line3"
 }
 
-# ── Test harness dispatch ──────────────────────────────────────────────────────
+# ── Line assembly ──────────────────────────────────────────────────────────────
+assemble_output() {
+    SEP="${C_GRAY}  |  ${RESET}"
+
+    # Line 1: model | git | duration
+    line1=""
+    seg=$(segment_model); [ -n "$seg" ] && line1="$seg"
+    seg=$(segment_git);   [ -n "$seg" ] && { [ -n "$line1" ] && line1="${line1}${SEP}${seg}" || line1="$seg"; }
+    seg=$(segment_duration); [ -n "$seg" ] && { [ -n "$line1" ] && line1="${line1}${SEP}${seg}" || line1="$seg"; }
+
+    # Line 2: context | cost
+    line2=""
+    seg=$(segment_context); [ -n "$seg" ] && line2="$seg"
+    seg=$(segment_cost);    [ -n "$seg" ] && { [ -n "$line2" ] && line2="${line2}${SEP}${seg}" || line2="$seg"; }
+
+    # Line 3: subscription
+    line3=$(segment_subscription)
+
+    # Print non-empty lines
+    out=""
+    [ -n "$line1" ] && out="$line1"
+    if [ -n "$line2" ]; then
+        [ -n "$out" ] && out="${out}
+${line2}" || out="$line2"
+    fi
+    if [ -n "$line3" ]; then
+        [ -n "$out" ] && out="${out}
+${line3}" || out="$line3"
+    fi
+
+    printf '%b' "$out"
+}
+
+# ── Entry point ────────────────────────────────────────────────────────────────
 if [ -n "$TEST_SEGMENT" ]; then
     "segment_${TEST_SEGMENT}"
     exit 0
 fi
+
+assemble_output
