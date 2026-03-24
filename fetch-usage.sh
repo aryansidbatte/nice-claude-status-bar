@@ -71,3 +71,53 @@ get_usage_token() {
     echo "$token" > "$TOKEN_CACHE_FILE" 2>/dev/null || true
     echo "$token"
 }
+
+# ── Lock file ──────────────────────────────────────────────────────────────────
+read_active_lock() {
+    now_ts=$(now)
+    [ -f "$LOCK_FILE" ] || return 1
+
+    lock_data=$(cat "$LOCK_FILE" 2>/dev/null)
+    if [ -n "$lock_data" ]; then
+        blocked_until=$(echo "$lock_data" | jq -r '.blockedUntil // empty' 2>/dev/null) || true
+        error=$(echo "$lock_data" | jq -r '.error // "timeout"' 2>/dev/null) || true
+        if [ -n "$blocked_until" ]; then
+            case "$blocked_until" in
+                ''|*[!0-9]*) ;;
+                *)
+                    if [ "$blocked_until" -gt "$now_ts" ]; then
+                        echo "${error}:${blocked_until}"
+                        return 0
+                    fi
+                    return 1
+                    ;;
+            esac
+        fi
+    fi
+
+    # mtime-based fallback
+    lock_mtime=$(file_mtime "$LOCK_FILE")
+    blocked_until=$(( lock_mtime + LOCK_MAX_AGE ))
+    if [ "$blocked_until" -gt "$now_ts" ]; then
+        echo "timeout:${blocked_until}"
+        return 0
+    fi
+    return 1
+}
+
+write_lock() {
+    blocked_until="$1"
+    error="${2:-timeout}"
+    ensure_cache_dir
+    printf '{"blockedUntil":%s,"error":"%s"}' "$blocked_until" "$error" > "$LOCK_FILE" 2>/dev/null || true
+}
+
+# ── Cache ──────────────────────────────────────────────────────────────────────
+read_stale_cache() {
+    [ -f "$CACHE_FILE" ] || return 1
+    cat "$CACHE_FILE" 2>/dev/null
+}
+
+create_error_response() {
+    printf '{"error":"%s"}' "$1"
+}
