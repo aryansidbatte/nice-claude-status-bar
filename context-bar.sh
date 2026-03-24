@@ -157,6 +157,51 @@ segment_context() {
         "$C_GRAY" "$rest_part" "$RESET"
 }
 
+# ── Segment: Session Cost ──────────────────────────────────────────────────────
+segment_cost() {
+    cwd=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null) || cwd=""
+    [ -z "$cwd" ] && return
+
+    jsonl=$(find_session_jsonl "$cwd") || return
+    [ -z "$jsonl" ] && return
+
+    cost=$(jq -rs '
+        map(select(.type == "assistant" and
+                    .message.usage != null and
+                    (.message.usage.output_tokens // 0) > 0)) |
+        map(
+            (.message.model // "") as $model |
+            (if ($model | test("opus-4"))   then {i:15,   cw:18.75, cr:1.5,  o:75}
+             elif ($model | test("haiku-4")) then {i:0.8,  cw:1,     cr:0.08, o:4}
+             else                                {i:3,    cw:3.75,  cr:0.3,  o:15}
+             end) as $r |
+            (.message.usage.input_tokens // 0)                  * $r.i  / 1000000 +
+            (.message.usage.cache_creation_input_tokens // 0)   * $r.cw / 1000000 +
+            (.message.usage.cache_read_input_tokens // 0)       * $r.cr / 1000000 +
+            (.message.usage.output_tokens // 0)                 * $r.o  / 1000000
+        ) |
+        add // 0
+    ' "$jsonl" 2>/dev/null) || return
+
+    # Skip if raw cost is zero
+    is_zero=$(echo "$cost" | jq '. == 0' 2>/dev/null) || is_zero="true"
+    [ "$is_zero" = "true" ] && return
+
+    # Format to exactly 3 decimal places
+    formatted=$(echo "$cost" | jq -r '
+        . * 1000 | round as $m |
+        ($m / 1000 | tostring) as $s |
+        "~$" + if ($s | test("\\.")) then
+            $s + "0" * (3 - ($s | split(".")[1] | length))
+        else
+            $s + ".000"
+        end
+    ' 2>/dev/null) || return
+    [ -z "$formatted" ] && return
+
+    printf '%b%s%b %b%s%b' "$C_TEAL" "⊛" "$RESET" "$C_BLUE" "$formatted" "$RESET"
+}
+
 # ── Test harness dispatch ──────────────────────────────────────────────────────
 if [ -n "$TEST_SEGMENT" ]; then
     "segment_${TEST_SEGMENT}"

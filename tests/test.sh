@@ -75,6 +75,16 @@ actual=$(cat "$FIXTURES/stdin-minimal.json" \
     | sh "$SCRIPTS/context-bar.sh" --test-segment context)
 assert_eq "context: null usage shows 0% of 200k" "▸ 0% of 200k" "$actual"
 
+# Task 9: cost segment — correct cost from fixture JSONL
+FAKE_SLUG="-Users-testuser-myproject"
+FAKE_DIR="$(mktemp -d)"
+mkdir -p "$FAKE_DIR/.claude/projects/$FAKE_SLUG"
+cp "$FIXTURES/session.jsonl" "$FAKE_DIR/.claude/projects/$FAKE_SLUG/session.jsonl"
+actual=$(cat "$FIXTURES/stdin-full.json" \
+    | HOME="$FAKE_DIR" sh "$SCRIPTS/context-bar.sh" --test-segment cost)
+assert_eq "cost: correct cost from JSONL" "⊛ ~\$0.018" "$actual"
+rm -rf "$FAKE_DIR"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
