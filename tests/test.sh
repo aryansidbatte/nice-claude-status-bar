@@ -64,6 +64,17 @@ actual=$(printf '{"model":{"id":"claude-sonnet-4-6","display_name":null},"cwd":"
     | sh "$SCRIPTS/context-bar.sh" --test-segment duration)
 assert_eq "duration: empty when no JSONL" "" "$actual"
 
+# Task 8: context segment — computes pct and context_k correctly
+# tokens_used = 12000 + 50000 + 22000 = 84000; pct = 84000*100/200000 = 42; 200k
+actual=$(cat "$FIXTURES/stdin-full.json" \
+    | sh "$SCRIPTS/context-bar.sh" --test-segment context)
+assert_eq "context: correct pct and k display" "▸ 42% of 200k" "$actual"
+
+# Task 8: context segment — defaults context_window_size to 200000 when null
+actual=$(cat "$FIXTURES/stdin-minimal.json" \
+    | sh "$SCRIPTS/context-bar.sh" --test-segment context)
+assert_eq "context: null usage shows 0% of 200k" "▸ 0% of 200k" "$actual"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

@@ -134,6 +134,29 @@ segment_duration() {
     printf '%b%s%b %b%s%b' "$C_TEAL" "⧗" "$RESET" "$C_BLUE" "$formatted" "$RESET"
 }
 
+# ── Segment: Context Window ────────────────────────────────────────────────────
+segment_context() {
+    result=$(echo "$INPUT" | jq -r '
+        (.context_window.context_window_size // 200000) as $size |
+        (if $size == 0 then 200000 else $size end) as $size |
+        ((.context_window.current_usage.input_tokens // 0) +
+         (.context_window.current_usage.cache_creation_input_tokens // 0) +
+         (.context_window.current_usage.cache_read_input_tokens // 0)) as $used |
+        ($used * 100 / $size | floor) as $pct |
+        ($size / 1000 | floor | tostring + "k") as $k |
+        ($pct | tostring) + "% of " + $k
+    ' 2>/dev/null) || return
+    [ -z "$result" ] && return
+
+    # Split for coloring: "42%" is blue, "of 200k" is gray
+    pct_part="${result%% *}"
+    rest_part="${result#* }"
+    printf '%b%s%b %b%s%b %b%s%b' \
+        "$C_TEAL" "▸" "$RESET" \
+        "$C_BLUE" "$pct_part" "$RESET" \
+        "$C_GRAY" "$rest_part" "$RESET"
+}
+
 # ── Test harness dispatch ──────────────────────────────────────────────────────
 if [ -n "$TEST_SEGMENT" ]; then
     "segment_${TEST_SEGMENT}"
