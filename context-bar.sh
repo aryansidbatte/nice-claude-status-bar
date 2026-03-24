@@ -114,8 +114,9 @@ segment_duration() {
     [ -z "$first_ts" ] && return
 
     # Compute duration in seconds using jq fromdate
+    # Normalize timestamp: strip fractional seconds and convert +00:00 to Z
     duration=$(jq -n --arg ts "$first_ts" '
-        ($ts | try fromdate catch null) as $start |
+        ($ts | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | try fromdate catch null) as $start |
         if $start == null then empty
         else (now - $start | floor)
         end
@@ -219,9 +220,9 @@ segment_subscription() {
     [ -n "$has_error" ] && return
 
     # Parse fields
-    session_pct=$(echo "$usage_data" | jq -r '.sessionUsage // empty' 2>/dev/null) || session_pct=""
+    session_pct=$(echo "$usage_data" | jq -r '.sessionUsage // empty | if . then floor | tostring else empty end' 2>/dev/null) || session_pct=""
     session_reset=$(echo "$usage_data" | jq -r '.sessionResetAt // empty' 2>/dev/null) || session_reset=""
-    weekly_pct=$(echo "$usage_data" | jq -r '.weeklyUsage // empty' 2>/dev/null) || weekly_pct=""
+    weekly_pct=$(echo "$usage_data" | jq -r '.weeklyUsage // empty | if . then floor | tostring else empty end' 2>/dev/null) || weekly_pct=""
     weekly_reset=$(echo "$usage_data" | jq -r '.weeklyResetAt // empty' 2>/dev/null) || weekly_reset=""
 
     [ -z "$session_pct" ] && return
@@ -229,7 +230,8 @@ segment_subscription() {
     # Session reset countdown
     countdown=""
     if [ -n "$session_reset" ]; then
-        diff=$(echo "$session_reset" | jq -r '
+        diff=$(jq -rn --arg ts "$session_reset" '
+            $ts | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") |
             try (fromdate - now | floor) catch empty
         ' 2>/dev/null) || diff=""
         if [ -n "$diff" ]; then
@@ -259,8 +261,8 @@ segment_subscription() {
 
         # Pacing
         if [ -n "$weekly_reset" ]; then
-            pacing=$(echo "$weekly_reset" | jq -r --argjson wpct "$weekly_pct" '
-                (try fromdate catch null) as $reset_epoch |
+            pacing=$(jq -rn --arg ts "$weekly_reset" --argjson wpct "$weekly_pct" '
+                ($ts | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | try fromdate catch null) as $reset_epoch |
                 if $reset_epoch == null then empty
                 elif $reset_epoch <= now then empty
                 else
