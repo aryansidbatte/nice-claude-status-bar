@@ -47,6 +47,39 @@ Remove `--color` if you prefer plain text (no ANSI color codes).
 
 ---
 
+## Themes
+
+Set a color theme by creating `~/.claude/scripts/context-bar.conf`:
+
+```sh
+THEME=catppuccin-mocha
+```
+
+Available themes:
+
+| Theme | Style |
+|---|---|
+| `teal` | Default — teal symbols, blue values |
+| `amber` | Warm gold |
+| `rose` | Soft rose/pink |
+| `green` | Forest green |
+| `purple` | Muted purple |
+| `mono` | Near-white monochrome |
+| `red` | Red |
+| `orange` | True orange |
+| `yellow` | Golden yellow |
+| `cyan` | Bright cyan |
+| `blue` | Cool blue |
+| `pink` | Vivid pink |
+| `lavender` | Soft lavender |
+| `mint` | Mint green |
+| `catppuccin-mocha` | Catppuccin Mocha (mauve + blue, truecolor) |
+| `gruvbox` | Gruvbox (orange + yellow, truecolor) |
+
+If the file is absent or the theme name is unrecognized, `teal` is used. Labels and separators (`of`, `5hr`, `weekly`, `|`, `·`) are always gray regardless of theme.
+
+---
+
 ## What each line shows
 
 ### Line 1 — session identity
