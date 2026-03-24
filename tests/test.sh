@@ -20,7 +20,9 @@ assert_eq() {
     fi
 }
 
-# Tests added in subsequent tasks
+# Task 2: token retrieval — test that get_usage_token exits non-zero when no credentials exist
+actual=$(HOME=/nonexistent CLAUDE_CONFIG_DIR=/nonexistent sh -c '. '"$SCRIPTS"'/fetch-usage.sh; get_usage_token' 2>/dev/null; echo $?)
+assert_eq "get_usage_token: returns non-zero when no credentials" "1" "$actual"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
