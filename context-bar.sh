@@ -71,6 +71,36 @@ segment_model() {
     printf '%b%s%b %b%s%b' "$C_TEAL" "◆" "$RESET" "$C_BLUE" "$model" "$RESET"
 }
 
+# ── Segment: Git ───────────────────────────────────────────────────────────────
+segment_git() {
+    cwd=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null) || cwd=""
+    [ -z "$cwd" ] && return
+    command -v git > /dev/null 2>&1 || return
+
+    branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null) || return
+    [ -z "$branch" ] && return
+
+    # Ahead/behind (silently skip if no upstream)
+    ahead_behind=$(git -C "$cwd" rev-list --count --left-right "@{upstream}...HEAD" 2>/dev/null) || ahead_behind=""
+    behind=0
+    ahead=0
+    if [ -n "$ahead_behind" ]; then
+        behind=$(echo "$ahead_behind" | cut -f1)
+        ahead=$(echo "$ahead_behind" | cut -f2)
+    fi
+
+    # Dirty check
+    dirty=$(git -C "$cwd" status --porcelain 2>/dev/null) || dirty=""
+
+    # Assemble branch display
+    display="$branch"
+    [ "$ahead" -gt 0 ] 2>/dev/null && display="${display} ↑${ahead}"
+    [ "$behind" -gt 0 ] 2>/dev/null && display="${display} ↓${behind}"
+    [ -n "$dirty" ] && display="${display} ●"
+
+    printf '%b%s%b  %b%s%b' "$C_TEAL" "⎇" "$RESET" "$C_BLUE" "$display" "$RESET"
+}
+
 # ── Test harness dispatch ──────────────────────────────────────────────────────
 if [ -n "$TEST_SEGMENT" ]; then
     "segment_${TEST_SEGMENT}"

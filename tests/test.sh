@@ -49,6 +49,16 @@ assert_eq "model: falls back to model.id transformation" "◆ Sonnet 4.6" "$actu
 actual=$(printf '{"model":{"id":null,"display_name":null},"cwd":"/tmp","context_window":null}' | sh "$SCRIPTS/context-bar.sh" --test-segment model)
 assert_eq "model: null fields returns empty" "" "$actual"
 
+# Task 6: git segment — skip when cwd is not a git repo
+actual=$(printf '{"model":{"id":"claude-sonnet-4-6","display_name":null},"cwd":"/tmp","context_window":null}' \
+    | sh "$SCRIPTS/context-bar.sh" --test-segment git)
+assert_eq "git: empty output when not a git repo" "" "$actual"
+
+# Task 6: git segment — skip when cwd is empty
+actual=$(printf '{"model":{"id":"claude-sonnet-4-6","display_name":null},"cwd":"","context_window":null}' \
+    | sh "$SCRIPTS/context-bar.sh" --test-segment git)
+assert_eq "git: empty output when cwd is empty" "" "$actual"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
