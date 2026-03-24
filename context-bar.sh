@@ -202,6 +202,81 @@ segment_cost() {
     printf '%b%s%b %b%s%b' "$C_TEAL" "⊛" "$RESET" "$C_BLUE" "$formatted" "$RESET"
 }
 
+# ── Segment: Subscription Usage ───────────────────────────────────────────────
+segment_subscription() {
+    # Allow test override via env var
+    if [ -n "$FETCH_USAGE_OVERRIDE" ]; then
+        usage_data="$FETCH_USAGE_OVERRIDE"
+    elif [ -x "$FETCH_USAGE" ]; then
+        usage_data=$("$FETCH_USAGE" 2>/dev/null) || usage_data=""
+    else
+        return
+    fi
+
+    [ -z "$usage_data" ] && return
+
+    has_error=$(echo "$usage_data" | jq -r '.error // empty' 2>/dev/null) || has_error="error"
+    [ -n "$has_error" ] && return
+
+    # Parse fields
+    session_pct=$(echo "$usage_data" | jq -r '.sessionUsage // empty' 2>/dev/null) || session_pct=""
+    session_reset=$(echo "$usage_data" | jq -r '.sessionResetAt // empty' 2>/dev/null) || session_reset=""
+    weekly_pct=$(echo "$usage_data" | jq -r '.weeklyUsage // empty' 2>/dev/null) || weekly_pct=""
+    weekly_reset=$(echo "$usage_data" | jq -r '.weeklyResetAt // empty' 2>/dev/null) || weekly_reset=""
+
+    [ -z "$session_pct" ] && return
+
+    # Session reset countdown
+    countdown=""
+    if [ -n "$session_reset" ]; then
+        diff=$(echo "$session_reset" | jq -r '
+            try (fromdate - now | floor) catch empty
+        ' 2>/dev/null) || diff=""
+        if [ -n "$diff" ]; then
+            if [ "$diff" -le 0 ]; then
+                countdown="resetting"
+            elif [ "$diff" -ge 3600 ]; then
+                h=$(( diff / 3600 ))
+                m=$(( (diff % 3600) / 60 ))
+                countdown="${h}h ${m}m"
+            else
+                m=$(( diff / 60 ))
+                countdown="${m}m"
+            fi
+        fi
+    fi
+
+    # 5hr segment
+    if [ -n "$countdown" ]; then
+        line3="${C_TEAL}⚡${RESET} ${C_BLUE}${session_pct}%${RESET}${C_GRAY} 5hr (${countdown})${RESET}"
+    else
+        line3="${C_TEAL}⚡${RESET} ${C_BLUE}${session_pct}%${RESET}${C_GRAY} 5hr${RESET}"
+    fi
+
+    # Weekly + pacing
+    if [ -n "$weekly_pct" ]; then
+        line3="${line3}${C_GRAY}  ·  ${RESET}${C_TEAL}⟳${RESET} ${C_BLUE}${weekly_pct}%${RESET}${C_GRAY} weekly${RESET}"
+
+        # Pacing
+        if [ -n "$weekly_reset" ]; then
+            pacing=$(echo "$weekly_reset" | jq -r --argjson wpct "$weekly_pct" '
+                (try fromdate catch null) as $reset_epoch |
+                if $reset_epoch == null then empty
+                elif $reset_epoch <= now then empty
+                else
+                    (($reset_epoch - now) / 86400) as $days |
+                    (if $days < 0.1 then 0.1 else $days end) as $days |
+                    ((100 - $wpct) / $days * 10 | round) / 10 |
+                    tostring + "%"
+                end
+            ' 2>/dev/null) || pacing=""
+            [ -n "$pacing" ] && line3="${line3}${C_GRAY}  ·  ${RESET}${C_TEAL}→${RESET} ${C_BLUE}${pacing}${RESET}${C_GRAY}/day${RESET}"
+        fi
+    fi
+
+    printf '%b' "$line3"
+}
+
 # ── Test harness dispatch ──────────────────────────────────────────────────────
 if [ -n "$TEST_SEGMENT" ]; then
     "segment_${TEST_SEGMENT}"

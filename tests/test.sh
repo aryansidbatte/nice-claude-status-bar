@@ -85,6 +85,12 @@ actual=$(cat "$FIXTURES/stdin-full.json" \
 assert_eq "cost: correct cost from JSONL" "⊛ ~\$0.018" "$actual"
 rm -rf "$FAKE_DIR"
 
+# Task 10: subscription — skips when fetch-usage returns error
+actual=$(cat "$FIXTURES/stdin-full.json" \
+    | FETCH_USAGE_OVERRIDE='{"error":"no-credentials"}' \
+      sh "$SCRIPTS/context-bar.sh" --test-segment subscription)
+assert_eq "subscription: empty when fetch-usage returns error" "" "$actual"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
