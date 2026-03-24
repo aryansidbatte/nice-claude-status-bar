@@ -21,6 +21,30 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
 CONF_FILE="${SCRIPT_DIR}/context-bar.conf"
 [ -f "$CONF_FILE" ] && . "$CONF_FILE" 2>/dev/null || true
 
+# ── Theme ──────────────────────────────────────────────────────────────────────
+set_theme() {
+    theme="${1:-teal}"
+    case "$theme" in
+        teal)             C_TEAL='\033[38;5;66m';  C_BLUE='\033[38;5;74m'  ;;
+        amber)            C_TEAL='\033[38;5;130m'; C_BLUE='\033[38;5;178m' ;;
+        rose)             C_TEAL='\033[38;5;132m'; C_BLUE='\033[38;5;211m' ;;
+        green)            C_TEAL='\033[38;5;65m';  C_BLUE='\033[38;5;72m'  ;;
+        purple)           C_TEAL='\033[38;5;98m';  C_BLUE='\033[38;5;141m' ;;
+        mono)             C_TEAL='\033[38;5;250m'; C_BLUE='\033[38;5;255m' ;;
+        red)              C_TEAL='\033[38;5;124m'; C_BLUE='\033[38;5;203m' ;;
+        orange)           C_TEAL='\033[38;5;166m'; C_BLUE='\033[38;5;208m' ;;
+        yellow)           C_TEAL='\033[38;5;100m'; C_BLUE='\033[38;5;184m' ;;
+        cyan)             C_TEAL='\033[38;5;30m';  C_BLUE='\033[38;5;44m'  ;;
+        blue)             C_TEAL='\033[38;5;25m';  C_BLUE='\033[38;5;69m'  ;;
+        pink)             C_TEAL='\033[38;5;127m'; C_BLUE='\033[38;5;207m' ;;
+        lavender)         C_TEAL='\033[38;5;103m'; C_BLUE='\033[38;5;147m' ;;
+        mint)             C_TEAL='\033[38;5;29m';  C_BLUE='\033[38;5;79m'  ;;
+        catppuccin-mocha) C_TEAL='\033[38;2;203;166;247m'; C_BLUE='\033[38;2;137;180;250m' ;;
+        gruvbox)          C_TEAL='\033[38;2;254;128;25m';  C_BLUE='\033[38;2;250;189;47m'  ;;
+        *)                C_TEAL='\033[38;5;66m';  C_BLUE='\033[38;5;74m'  ;;
+    esac
+}
+
 # ── Colors ─────────────────────────────────────────────────────────────────────
 RESET=''
 C_TEAL=''
@@ -28,9 +52,8 @@ C_BLUE=''
 C_GRAY=''
 if [ "$USE_COLOR" = "1" ]; then
     RESET='\033[0m'
-    C_TEAL='\033[38;5;66m'
-    C_BLUE='\033[38;5;74m'
     C_GRAY='\033[38;5;245m'
+    set_theme "${THEME:-teal}"
 fi
 
 # ── Stdin ──────────────────────────────────────────────────────────────────────
