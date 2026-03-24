@@ -23,8 +23,7 @@ CONF_FILE="${SCRIPT_DIR}/context-bar.conf"
 
 # ── Theme ──────────────────────────────────────────────────────────────────────
 set_theme() {
-    theme="${1:-teal}"
-    case "$theme" in
+    case "${1:-teal}" in
         teal)             C_TEAL='\033[38;5;66m';  C_BLUE='\033[38;5;74m'  ;;
         amber)            C_TEAL='\033[38;5;130m'; C_BLUE='\033[38;5;178m' ;;
         rose)             C_TEAL='\033[38;5;132m'; C_BLUE='\033[38;5;211m' ;;
