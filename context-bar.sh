@@ -68,11 +68,7 @@ segment_model() {
     fi
 
     [ -z "$model" ] && return
-    if [ "$USE_COLOR" = "1" ]; then
-        printf '%b%s%b %b%s%b' "$C_TEAL" "◆" "$RESET" "$C_BLUE" "$model" "$RESET"
-    else
-        printf '%s' "$model"
-    fi
+    printf '%b%s%b %b%s%b' "$C_TEAL" "◆" "$RESET" "$C_BLUE" "$model" "$RESET"
 }
 
 # ── Test harness dispatch ──────────────────────────────────────────────────────
