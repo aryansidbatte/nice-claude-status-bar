@@ -276,9 +276,9 @@ segment_subscription() {
 
     # 5hr segment
     if [ -n "$countdown" ]; then
-        line3="${C_TEAL}⚡${RESET} ${C_BLUE}${session_pct}%${RESET}${C_GRAY} 5hr (${countdown})${RESET}"
+        line3="${C_TEAL}⚡${RESET}${C_BLUE}${session_pct}%${RESET}${C_GRAY} 5hr (${countdown})${RESET}"
     else
-        line3="${C_TEAL}⚡${RESET} ${C_BLUE}${session_pct}%${RESET}${C_GRAY} 5hr${RESET}"
+        line3="${C_TEAL}⚡${RESET}${C_BLUE}${session_pct}%${RESET}${C_GRAY} 5hr${RESET}"
     fi
 
     # Weekly + pacing
