@@ -197,6 +197,5 @@ To add a segment, write a `segment_<name>` function that prints to stdout (empty
 ```
 nice-claude-status-bar/
 ├── context-bar.sh     # main script — install to ~/.claude/scripts/
-├── fetch-usage.sh     # subscription quota fetcher — install to ~/.claude/scripts/
-└── forked/            # original reference implementation (unchanged)
+└── fetch-usage.sh     # subscription quota fetcher — install to ~/.claude/scripts/
 ```
