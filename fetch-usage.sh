@@ -197,7 +197,8 @@ fetch_usage_data() {
             if [ -n "$cached" ]; then
                 has_error=$(echo "$cached" | jq -r '.error // empty' 2>/dev/null) || true
                 if [ -z "$has_error" ]; then
-                    # If sessionResetAt has passed, treat cache as stale so we fetch fresh data
+                    # If sessionResetAt has passed, use a shorter TTL so we poll for fresh data,
+                    # but still throttle to avoid hammering the API on every status bar tick.
                     session_reset=$(echo "$cached" | jq -r '.sessionResetAt // empty' 2>/dev/null) || session_reset=""
                     reset_passed="0"
                     if [ -n "$session_reset" ]; then
@@ -206,7 +207,12 @@ fetch_usage_data() {
                             try (if fromdate <= now then "1" else "0" end) catch "0"
                         ' 2>/dev/null) || reset_passed="0"
                     fi
-                    [ "$reset_passed" != "1" ] && echo "$cached" && return 0
+                    if [ "$reset_passed" != "1" ]; then
+                        echo "$cached" && return 0
+                    elif [ "$cache_age" -lt 60 ]; then
+                        # Reset has passed but cache is recent — wait before retrying
+                        echo "$cached" && return 0
+                    fi
                 fi
             fi
         fi
@@ -258,6 +264,7 @@ fetch_usage_data() {
             ;;
         rate-limited)
             write_lock $(( now_ts + result_value )) "rate-limited"
+            rm -f "$TOKEN_CACHE_FILE" 2>/dev/null || true
             stale=$(read_stale_cache 2>/dev/null) || stale=""
             if [ -n "$stale" ]; then
                 has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null) || true
