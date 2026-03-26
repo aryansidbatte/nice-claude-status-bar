@@ -196,7 +196,18 @@ fetch_usage_data() {
             cached=$(cat "$CACHE_FILE" 2>/dev/null)
             if [ -n "$cached" ]; then
                 has_error=$(echo "$cached" | jq -r '.error // empty' 2>/dev/null) || true
-                [ -z "$has_error" ] && echo "$cached" && return 0
+                if [ -z "$has_error" ]; then
+                    # If sessionResetAt has passed, treat cache as stale so we fetch fresh data
+                    session_reset=$(echo "$cached" | jq -r '.sessionResetAt // empty' 2>/dev/null) || session_reset=""
+                    reset_passed="0"
+                    if [ -n "$session_reset" ]; then
+                        reset_passed=$(jq -rn --arg ts "$session_reset" '
+                            $ts | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") |
+                            try (if fromdate <= now then "1" else "0" end) catch "0"
+                        ' 2>/dev/null) || reset_passed="0"
+                    fi
+                    [ "$reset_passed" != "1" ] && echo "$cached" && return 0
+                fi
             fi
         fi
     fi
