@@ -261,8 +261,10 @@ segment_subscription() {
             try (fromdate - now | floor) catch empty
         ' 2>/dev/null) || diff=""
         if [ -n "$diff" ]; then
-            if [ "$diff" -le 0 ]; then
+            if [ "$diff" -le 0 ] && [ "$diff" -gt -300 ]; then
                 countdown="resetting"
+            elif [ "$diff" -le -300 ]; then
+                countdown=""
             elif [ "$diff" -ge 3600 ]; then
                 h=$(( diff / 3600 ))
                 m=$(( (diff % 3600) / 60 ))
